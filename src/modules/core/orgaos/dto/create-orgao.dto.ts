@@ -10,7 +10,11 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { EsferaEnum } from '../entities/orgao.entity';
+export enum EsferaEnum {
+  FEDERAL = 'federal',
+  ESTADUAL = 'estadual',
+  MUNICIPAL = 'municipal',
+}
 
 class EnderecoDto {
   @ApiProperty({ description: 'Logradouro', example: 'Rua Exemplo' })

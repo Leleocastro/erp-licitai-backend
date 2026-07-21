@@ -34,9 +34,15 @@ export class OrgaosService {
     }
 
     const orgao = this.orgaoRepository.create({
-      ...dto,
       cnpj: cnpjLimpo,
-      tenantId: dto.tenantId || tenantId || undefined,
+      razao_social: dto.razaoSocial,
+      nome_fantasia: dto.nomeFantasia,
+      esfera: dto.esfera,
+      endereco: dto.endereco as Record<string, any>,
+      telefone: dto.telefone,
+      email: dto.email,
+      logo_url: dto.logoUrl,
+      ativo: dto.ativo,
     });
 
     const salvo = await this.orgaoRepository.save(orgao);
