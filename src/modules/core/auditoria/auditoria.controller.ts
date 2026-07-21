@@ -5,7 +5,7 @@ import { FiltrarAuditoriaDto } from './dto/filtrar-auditoria.dto';
 import { Auditoria } from './entities/auditoria.entity';
 
 @ApiTags('Auditoria')
-@Controller('api/core/auditoria')
+@Controller('core/auditoria')
 export class AuditoriaController {
   constructor(private readonly auditoriaService: AuditoriaService) {}
 
