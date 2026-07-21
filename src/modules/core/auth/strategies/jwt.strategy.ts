@@ -1,8 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
-import { Inject } from '@nestjs/common';
 import jwtConfig from '../../../../config/jwt.config';
 import { UsuariosService } from '../../usuarios/usuarios.service';
 
@@ -27,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const usuario = await this.usuariosService.findOne(payload.sub);
+    const usuario = await this.usuariosService.findOneComRolesPermissoes(payload.sub);
     if (!usuario) {
       throw new UnauthorizedException('Usuário não encontrado');
     }
@@ -35,16 +34,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Conta não está ativa');
     }
 
-    const roles = usuario.roles?.map((r) => r.nome) || [];
-    const permissoes: string[] = [];
-    for (const role of usuario.roles || []) {
-      const rolePerms = (role as any).permissoes || [];
-      for (const perm of rolePerms) {
-        if (perm.slug && !permissoes.includes(perm.slug)) {
-          permissoes.push(perm.slug);
+    const roles = usuario.roles?.map((r) => r.nome).filter(Boolean) || [];
+
+    const permSet = new Set<string>();
+    if (usuario.roles) {
+      for (const role of usuario.roles) {
+        if (role.permissoes) {
+          for (const perm of role.permissoes) {
+            permSet.add(perm.slug);
+          }
         }
       }
     }
+    const permissoes = Array.from(permSet);
 
     return {
       id: usuario.id,

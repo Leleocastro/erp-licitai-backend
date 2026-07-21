@@ -23,6 +23,7 @@ import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 
 @ApiTags('Core - Roles')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Controller('core/roles')
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class RolesController {

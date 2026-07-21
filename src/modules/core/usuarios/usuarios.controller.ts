@@ -14,11 +14,13 @@ import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 import { Usuario } from './entities/usuario.entity';
 
 @ApiTags('Core - Usuários')
 @Controller('core/usuarios')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
