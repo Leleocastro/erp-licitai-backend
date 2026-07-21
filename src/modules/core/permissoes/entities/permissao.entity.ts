@@ -11,7 +11,7 @@ export class Permissao {
   @Column({ length: 50 })
   acao: string;
 
-  @Column({ length: 150, unique: true })
+  @Column({ length: 150, unique: true, insert: false, update: false })
   slug: string;
 
   @Column('text', { nullable: true })

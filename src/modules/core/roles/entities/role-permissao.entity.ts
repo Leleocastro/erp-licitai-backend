@@ -1,13 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('role_permissao')
 export class RolePermissao {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
+  @PrimaryColumn()
   role_id: string;
 
-  @Column()
+  @PrimaryColumn()
   permissao_id: string;
 }
