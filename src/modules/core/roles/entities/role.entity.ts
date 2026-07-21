@@ -14,7 +14,7 @@ export class Role {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   nome: string;
 
   @Column({ type: 'text', nullable: true })
