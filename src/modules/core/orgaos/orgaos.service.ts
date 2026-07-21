@@ -20,7 +20,7 @@ export class OrgaosService {
     private readonly orgaoRepository: Repository<Orgao>,
   ) {}
 
-  async criar(dto: CreateOrgaoDto, tenantId?: string): Promise<Orgao> {
+  async criar(dto: CreateOrgaoDto, _tenantId?: string): Promise<Orgao> {
     this.logger.log(`Criando orgao: ${dto.cnpj}`);
 
     const cnpjLimpo = dto.cnpj.replace(/\D/g, '');
