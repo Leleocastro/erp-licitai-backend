@@ -10,68 +10,47 @@ import {
 } from 'typeorm';
 import { UsuarioOrgao } from '../../usuarios/entities/usuario-orgao.entity';
 
-export enum EsferaEnum {
-  FEDERAL = 'federal',
-  ESTADUAL = 'estadual',
-  MUNICIPAL = 'municipal',
-}
-
-export interface Endereco {
-  logradouro: string;
-  numero?: string;
-  complemento?: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  cep: string;
-}
-
 @Entity('orgaos')
-@Index('idx_orgaos_tenant_id', ['tenantId'])
 export class Orgao {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('idx_orgaos_cnpj')
-  @Column({ type: 'varchar', length: 18, unique: true })
+  @Column({ length: 18, unique: true })
+  @Index()
   cnpj: string;
 
-  @Column({ name: 'razao_social', type: 'varchar', length: 255 })
-  razaoSocial: string;
+  @Column({ length: 255 })
+  razao_social: string;
 
-  @Column({ name: 'nome_fantasia', type: 'varchar', length: 255, nullable: true })
-  nomeFantasia: string;
+  @Column({ length: 255, nullable: true })
+  nome_fantasia: string;
 
-  @Index('idx_orgaos_esfera')
-  @Column({ type: 'enum', enum: EsferaEnum })
-  esfera: EsferaEnum;
+  @Column({ length: 20 })
+  esfera: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  endereco: Endereco;
+  endereco: Record<string, any>;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ length: 20, nullable: true })
   telefone: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ length: 255, nullable: true })
   email: string;
 
-  @Column({ name: 'logo_url', type: 'text', nullable: true })
-  logoUrl: string;
+  @Column({ type: 'text', nullable: true })
+  logo_url: string;
 
   @Column({ default: true })
   ativo: boolean;
 
-  @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
-  tenantId: string;
+  @CreateDateColumn()
+  created_at: Date;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  @UpdateDateColumn()
+  updated_at: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
-
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz' })
-  deletedAt: Date;
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @OneToMany(() => UsuarioOrgao, (uo) => uo.orgao)
   usuarioOrgaos: UsuarioOrgao[];

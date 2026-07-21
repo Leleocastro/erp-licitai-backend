@@ -26,15 +26,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const usuario = await this.usuariosService.findOneComRoles(payload.sub);
+    const usuario = await this.usuariosService.findOneComRolesPermissoes(payload.sub);
     if (!usuario) {
       throw new UnauthorizedException('Usuário não encontrado');
     }
     if (usuario.status !== 'ativo') {
       throw new UnauthorizedException('Conta não está ativa');
     }
-    const roles =
-      usuario.usuarioRoles?.map((ur) => ur.role?.nome).filter(Boolean) || [];
+
+    const roles = usuario.roles?.map((r) => r.nome).filter(Boolean) || [];
+
+    const permSet = new Set<string>();
+    if (usuario.roles) {
+      for (const role of usuario.roles) {
+        if (role.permissoes) {
+          for (const perm of role.permissoes) {
+            permSet.add(perm.slug);
+          }
+        }
+      }
+    }
+    const permissoes = Array.from(permSet);
 
     return {
       id: usuario.id,
@@ -42,6 +54,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       nome: usuario.nome,
       status: usuario.status,
       roles,
+      permissoes,
     };
   }
 }

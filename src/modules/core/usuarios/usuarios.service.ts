@@ -3,7 +3,6 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
-  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -15,8 +14,6 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 
 @Injectable()
 export class UsuariosService {
-  private readonly logger = new Logger(UsuariosService.name);
-
   constructor(
     @InjectRepository(Usuario)
     private usuariosRepository: Repository<Usuario>,
@@ -104,7 +101,6 @@ export class UsuariosService {
       }
 
       await queryRunner.commitTransaction();
-      this.logger.log(`Usuário criado: ${saved.id} - ${dados.email}`);
       return this.usuariosRepository.findOneOrFail({
         where: { id: saved.id },
         relations: ['usuarioOrgaos', 'usuarioOrgaos.orgao'],
@@ -117,20 +113,21 @@ export class UsuariosService {
     }
   }
 
-  async findAll(skip = 0, take = 20): Promise<{ data: Usuario[]; total: number }> {
-    const [data, total] = await this.usuariosRepository.findAndCount({
+  async findAll(): Promise<Usuario[]> {
+    return this.usuariosRepository.find({
       relations: ['usuarioOrgaos', 'usuarioOrgaos.orgao'],
-      skip,
-      take,
-      order: { created_at: 'DESC' },
     });
-    return { data, total };
   }
 
   async findOne(id: string): Promise<Usuario> {
     const usuario = await this.usuariosRepository.findOne({
       where: { id },
-      relations: ['usuarioOrgaos', 'usuarioOrgaos.orgao'],
+      relations: [
+        'usuarioOrgaos',
+        'usuarioOrgaos.orgao',
+        'roles',
+        'roles.permissoes',
+      ],
     });
     if (!usuario) {
       throw new NotFoundException('Usuário não encontrado');
@@ -138,14 +135,14 @@ export class UsuariosService {
     return usuario;
   }
 
-  async findOneComRoles(id: string): Promise<Usuario> {
+  async findOneComRolesPermissoes(id: string): Promise<Usuario> {
     const usuario = await this.usuariosRepository.findOne({
       where: { id },
       relations: [
         'usuarioOrgaos',
         'usuarioOrgaos.orgao',
-        'usuarioRoles',
-        'usuarioRoles.role',
+        'roles',
+        'roles.permissoes',
       ],
     });
     if (!usuario) {
@@ -155,7 +152,10 @@ export class UsuariosService {
   }
 
   async findByEmail(email: string): Promise<Usuario | null> {
-    return this.usuariosRepository.findOne({ where: { email } });
+    return this.usuariosRepository.findOne({
+      where: { email },
+      relations: ['roles', 'roles.permissoes'],
+    });
   }
 
   async update(
@@ -194,7 +194,7 @@ export class UsuariosService {
     }
 
     await this.usuariosRepository.update(id, {
-      ...dados as any,
+      ...dados,
       senha_hash: (dados as any).senha_hash || usuario.senha_hash,
     });
 
@@ -213,24 +213,20 @@ export class UsuariosService {
       }
     }
 
-    this.logger.log(`Usuário atualizado: ${id}`);
     return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
     const usuario = await this.findOne(id);
     await this.usuariosRepository.softRemove(usuario);
-    this.logger.log(`Usuário removido (soft): ${id}`);
   }
 
   async bloquear(id: string): Promise<void> {
-    await this.usuariosRepository.update(id, { status: 'bloqueado' as any });
-    this.logger.warn(`Usuário bloqueado: ${id}`);
+    await this.usuariosRepository.update(id, { status: 'bloqueado' });
   }
 
   async atualizarStatus(id: string, status: string): Promise<void> {
-    await this.usuariosRepository.update(id, { status: status as any });
-    this.logger.log(`Usuário ${id} status alterado para ${status}`);
+    await this.usuariosRepository.update(id, { status });
   }
 
   async atualizarUltimoLogin(id: string): Promise<void> {

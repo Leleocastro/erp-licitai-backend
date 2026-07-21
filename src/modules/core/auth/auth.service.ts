@@ -2,7 +2,6 @@ import {
   Injectable,
   UnauthorizedException,
   Inject,
-  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
@@ -12,31 +11,23 @@ import { v4 as uuidv4 } from 'uuid';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { LoginDto } from './dto/login.dto';
 import jwtConfig from '../../../config/jwt.config';
-import appConfig from '../../../config/app.config';
 
+const BLOQUEIO_PREFIX = 'rate_limit:';
+const REFRESH_PREFIX = 'refresh_token:';
 const MAX_TENTATIVAS = 5;
 const BLOQUEIO_MINUTOS = 30;
+const REFRESH_TOKEN_DIAS = 7;
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-  private readonly bloqueioPrefix: string;
-  private readonly refreshPrefix: string;
-
   constructor(
     private readonly usuariosService: UsuariosService,
     private readonly jwtService: JwtService,
     @Inject(jwtConfig.KEY)
     private jwtConfiguration: ConfigType<typeof jwtConfig>,
-    @Inject(appConfig.KEY)
-    private appConfiguration: ConfigType<typeof appConfig>,
     @Inject('REDIS_CLIENT')
     private redis: Redis,
-  ) {
-    const env = this.appConfiguration.environment;
-    this.bloqueioPrefix = `${env}:rate_limit:`;
-    this.refreshPrefix = `${env}:refresh_token:`;
-  }
+  ) {}
 
   async login(loginDto: LoginDto) {
     const { email, senha } = loginDto;
@@ -46,22 +37,20 @@ export class AuthService {
     const usuario = await this.usuariosService.findByEmail(email);
     if (!usuario) {
       await this.registrarTentativaFalha(email);
-      this.logger.warn(`Login falho: email não encontrado - ${email}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
     if (!senhaValida) {
       await this.registrarTentativaFalha(email);
-      this.logger.warn(`Login falho: senha incorreta - ${email}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     await this.limparTentativas(email);
     await this.usuariosService.atualizarUltimoLogin(usuario.id);
 
-    this.logger.log(`Login sucesso: ${email}`);
-    return this.gerarTokens(usuario);
+    const usuarioComRoles = await this.usuariosService.findOneComRolesPermissoes(usuario.id);
+    return this.gerarTokens(usuarioComRoles);
   }
 
   async refresh(refreshToken: string) {
@@ -75,7 +64,7 @@ export class AuthService {
       }
 
       const tokenValido = await this.redis.get(
-        `${this.refreshPrefix}${payload.jti}`,
+        `${REFRESH_PREFIX}${payload.jti}`,
       );
       if (!tokenValido) {
         throw new UnauthorizedException('Refresh token inválido ou expirado');
@@ -86,10 +75,10 @@ export class AuthService {
         throw new UnauthorizedException('Usuário não encontrado');
       }
 
-      await this.redis.del(`${this.refreshPrefix}${payload.jti}`);
+      await this.redis.del(`${REFRESH_PREFIX}${payload.jti}`);
 
-      this.logger.log(`Refresh token renovado: ${payload.sub}`);
-      return this.gerarTokens(usuario);
+      const usuarioComRoles = await this.usuariosService.findOneComRolesPermissoes(usuario.id);
+      return this.gerarTokens(usuarioComRoles);
     } catch (err) {
       if (err instanceof UnauthorizedException) {
         throw err;
@@ -104,8 +93,7 @@ export class AuthService {
         secret: this.jwtConfiguration.refreshSecret,
       });
       if (payload.jti) {
-        await this.redis.del(`${this.refreshPrefix}${payload.jti}`);
-        this.logger.log(`Logout: refresh token revogado - ${payload.sub}`);
+        await this.redis.del(`${REFRESH_PREFIX}${payload.jti}`);
       }
     } catch {
       throw new UnauthorizedException('Refresh token inválido');
@@ -119,15 +107,31 @@ export class AuthService {
   private async gerarTokens(usuario: any) {
     const jti = uuidv4();
 
+    const roles = usuario.roles?.map((r) => r.nome).filter(Boolean) || [];
+
+    const permSet = new Set<string>();
+    if (usuario.roles) {
+      for (const role of usuario.roles) {
+        if (role.permissoes) {
+          for (const perm of role.permissoes) {
+            permSet.add(perm.slug);
+          }
+        }
+      }
+    }
+    const permissoes = Array.from(permSet);
+
     const accessToken = this.jwtService.sign(
       {
         sub: usuario.id,
         email: usuario.email,
         tipo: 'access',
+        roles,
+        permissoes,
       },
       {
         secret: this.jwtConfiguration.accessSecret,
-        expiresIn: this.jwtConfiguration.accessExpiresIn,
+        expiresIn: this.jwtConfiguration.accessExpiresIn as any,
       },
     );
 
@@ -140,13 +144,13 @@ export class AuthService {
       },
       {
         secret: this.jwtConfiguration.refreshSecret,
-        expiresIn: this.jwtConfiguration.refreshExpiresIn,
+        expiresIn: this.jwtConfiguration.refreshExpiresIn as any,
       },
     );
 
     const refreshExpiresInSeconds = 7 * 24 * 60 * 60;
     await this.redis.set(
-      `${this.refreshPrefix}${jti}`,
+      `${REFRESH_PREFIX}${jti}`,
       usuario.id,
       'EX',
       refreshExpiresInSeconds,
@@ -160,17 +164,18 @@ export class AuthService {
         nome: usuario.nome,
         email: usuario.email,
         status: usuario.status,
+        roles,
+        permissoes,
       },
     };
   }
 
   private async verificarBloqueio(email: string): Promise<void> {
-    const chave = `${this.bloqueioPrefix}${email}`;
+    const chave = `${BLOQUEIO_PREFIX}${email}`;
     const tentativas = await this.redis.get(chave);
     if (tentativas && parseInt(tentativas, 10) >= MAX_TENTATIVAS) {
       const ttl = await this.redis.ttl(chave);
       const minutos = Math.ceil(ttl / 60);
-      this.logger.warn(`Conta bloqueada: ${email} - ${minutos}min restantes`);
       throw new UnauthorizedException(
         `Conta temporariamente bloqueada. Tente novamente em ${minutos} minuto(s).`,
       );
@@ -178,7 +183,7 @@ export class AuthService {
   }
 
   private async registrarTentativaFalha(email: string): Promise<void> {
-    const chave = `${this.bloqueioPrefix}${email}`;
+    const chave = `${BLOQUEIO_PREFIX}${email}`;
     const tentativas = await this.redis.incr(chave);
     if (tentativas === 1) {
       await this.redis.expire(chave, BLOQUEIO_MINUTOS * 60);
@@ -186,7 +191,7 @@ export class AuthService {
   }
 
   private async limparTentativas(email: string): Promise<void> {
-    const chave = `${this.bloqueioPrefix}${email}`;
+    const chave = `${BLOQUEIO_PREFIX}${email}`;
     await this.redis.del(chave);
   }
 }

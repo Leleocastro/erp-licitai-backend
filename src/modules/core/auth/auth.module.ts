@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigType } from '@nestjs/config';
@@ -15,7 +15,7 @@ import jwtConfig from '../../../config/jwt.config';
       inject: [jwtConfig.KEY],
       useFactory: (config: ConfigType<typeof jwtConfig>) => ({
         secret: config.accessSecret,
-        signOptions: { expiresIn: config.accessExpiresIn },
+        signOptions: { expiresIn: config.accessExpiresIn as any },
       }),
     }),
     UsuariosModule,

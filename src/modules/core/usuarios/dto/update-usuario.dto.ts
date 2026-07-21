@@ -6,7 +6,6 @@ import {
   IsUUID,
   MinLength,
   MaxLength,
-  Matches,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -23,10 +22,9 @@ export class UpdateUsuarioDto {
   @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ description: 'CPF do usuário (11 dígitos, somente números)' })
+  @ApiPropertyOptional({ description: 'CPF do usuário' })
   @IsOptional()
   @IsString()
-  @Matches(/^\d{11}$/, { message: 'CPF deve conter exatamente 11 dígitos numéricos' })
   cpf?: string;
 
   @ApiPropertyOptional({ description: 'Nova senha do usuário' })

@@ -3,8 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -27,12 +25,6 @@ export class UsuarioOrgao {
 
   @CreateDateColumn()
   created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  @DeleteDateColumn()
-  deleted_at: Date;
 
   @ManyToOne(() => Usuario, (usuario) => usuario.usuarioOrgaos)
   @JoinColumn({ name: 'usuario_id' })

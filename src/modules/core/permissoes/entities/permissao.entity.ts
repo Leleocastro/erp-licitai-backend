@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 
 @Entity('permissoes')
 export class Permissao {
@@ -11,15 +17,15 @@ export class Permissao {
   @Column({ length: 50 })
   acao: string;
 
-  @Column({ length: 150, unique: true, insert: false, update: false })
+  @Column({ length: 150, unique: true })
   slug: string;
 
-  @Column('text', { nullable: true })
+  @Column({ type: 'text', nullable: true })
   descricao: string;
 
   @Column({ length: 50, default: 'core' })
   modulo: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn()
   created_at: Date;
 }
