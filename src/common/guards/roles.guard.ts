@@ -33,7 +33,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasRole) {
       throw new ForbiddenException(
-        'Voce nao tem permissao para acessar este recurso',
+        'Você não tem permissão para acessar este recurso',
       );
     }
 

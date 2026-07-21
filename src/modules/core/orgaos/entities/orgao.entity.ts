@@ -6,7 +6,9 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   Index,
+  OneToMany,
 } from 'typeorm';
+import { UsuarioOrgao } from '../../usuarios/entities/usuario-orgao.entity';
 
 @Entity('orgaos')
 export class Orgao {
@@ -49,4 +51,7 @@ export class Orgao {
 
   @DeleteDateColumn()
   deleted_at: Date;
+
+  @OneToMany(() => UsuarioOrgao, (uo) => uo.orgao)
+  usuarioOrgaos: UsuarioOrgao[];
 }
