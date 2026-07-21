@@ -1,8 +1,12 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bullmq';
+import { APP_FILTER } from '@nestjs/core';
 import Redis from 'ioredis';
 import { CoreModule } from './modules/core/core.module';
+import { HealthModule } from './modules/core/health/health.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import redisConfig from './config/redis.config';
@@ -29,7 +33,19 @@ import appConfig from './config/app.config';
         synchronize: true,
       }),
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.get('redis.host'),
+          port: config.get('redis.port'),
+          password: config.get('redis.password'),
+        },
+      }),
+    }),
     CoreModule,
+    HealthModule,
   ],
   providers: [
     {
@@ -42,6 +58,10 @@ import appConfig from './config/app.config';
           password: config.get('redis.password'),
         });
       },
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
   exports: ['REDIS_CLIENT'],
