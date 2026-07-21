@@ -49,7 +49,8 @@ export class AuthService {
     await this.limparTentativas(email);
     await this.usuariosService.atualizarUltimoLogin(usuario.id);
 
-    return this.gerarTokens(usuario);
+    const usuarioComRoles = await this.usuariosService.findOneComRolesPermissoes(usuario.id);
+    return this.gerarTokens(usuarioComRoles);
   }
 
   async refresh(refreshToken: string) {
@@ -76,7 +77,8 @@ export class AuthService {
 
       await this.redis.del(`${REFRESH_PREFIX}${payload.jti}`);
 
-      return this.gerarTokens(usuario);
+      const usuarioComRoles = await this.usuariosService.findOneComRolesPermissoes(usuario.id);
+      return this.gerarTokens(usuarioComRoles);
     } catch (err) {
       if (err instanceof UnauthorizedException) {
         throw err;
@@ -104,6 +106,21 @@ export class AuthService {
 
   private async gerarTokens(usuario: any) {
     const jti = uuidv4();
+
+    const roles = usuario.roles?.map((r) => r.nome).filter(Boolean) || [];
+
+    const permissoes: string[] = [];
+    const permSet = new Set<string>();
+    if (usuario.roles) {
+      for (const role of usuario.roles) {
+        if (role.permissoes) {
+          for (const perm of role.permissoes) {
+            permSet.add(perm.slug);
+          }
+        }
+      }
+    }
+    permSet.forEach((p) => permissoes.push(p));
 
     const accessToken = this.jwtService.sign(
       {
@@ -146,6 +163,8 @@ export class AuthService {
         nome: usuario.nome,
         email: usuario.email,
         status: usuario.status,
+        roles,
+        permissoes,
       },
     };
   }

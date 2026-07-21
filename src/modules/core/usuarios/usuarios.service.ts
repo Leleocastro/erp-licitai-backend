@@ -130,6 +130,22 @@ export class UsuariosService {
     return usuario;
   }
 
+  async findOneComRolesPermissoes(id: string): Promise<Usuario> {
+    const usuario = await this.usuariosRepository.findOne({
+      where: { id },
+      relations: [
+        'usuarioOrgaos',
+        'usuarioOrgaos.orgao',
+        'roles',
+        'roles.permissoes',
+      ],
+    });
+    if (!usuario) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+    return usuario;
+  }
+
   async findByEmail(email: string): Promise<Usuario | null> {
     return this.usuariosRepository.findOne({ where: { email } });
   }

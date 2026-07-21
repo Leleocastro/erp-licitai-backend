@@ -6,11 +6,12 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   Index,
+  ManyToMany,
+  JoinTable,
   OneToMany,
 } from 'typeorm';
+import { Role } from '../../roles/entities/role.entity';
 import { UsuarioOrgao } from './usuario-orgao.entity';
-import { UsuarioRole } from '../../roles/entities/usuario-role.entity';
-import { UsuarioStatus } from './usuario-status.enum';
 
 @Entity('usuarios')
 export class Usuario {
@@ -49,15 +50,22 @@ export class Usuario {
   @Column({ length: 255, nullable: true })
   mfa_secret: string;
 
-  @Column({
-    type: 'varchar',
-    length: 20,
-    default: UsuarioStatus.PENDENTE,
-  })
-  status: UsuarioStatus;
+  @Column({ length: 20, default: 'pendente' })
+  status: string;
 
   @Column({ type: 'timestamptz', nullable: true })
   ultimo_login: Date;
+
+  @ManyToMany(() => Role)
+  @JoinTable({
+    name: 'usuario_role',
+    joinColumn: { name: 'usuario_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: Role[];
+
+  @OneToMany(() => UsuarioOrgao, (uo) => uo.usuario)
+  usuarioOrgaos: UsuarioOrgao[];
 
   @CreateDateColumn()
   created_at: Date;
@@ -67,10 +75,4 @@ export class Usuario {
 
   @DeleteDateColumn()
   deleted_at: Date;
-
-  @OneToMany(() => UsuarioOrgao, (uo) => uo.usuario)
-  usuarioOrgaos: UsuarioOrgao[];
-
-  @OneToMany(() => UsuarioRole, (ur) => ur.usuario)
-  usuarioRoles: UsuarioRole[];
 }
