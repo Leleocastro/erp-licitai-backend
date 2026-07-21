@@ -64,8 +64,8 @@ export class OrgaosService {
       qb.andWhere('orgao.cnpj LIKE :cnpj', { cnpj: `%${cnpj.replace(/\D/g, '')}%` });
     }
     if (razaoSocial) {
-      qb.andWhere('orgao.razaoSocial ILIKE :razaoSocial', {
-        razaoSocial: `%${razaoSocial}%`,
+      qb.andWhere('orgao.razao_social ILIKE :razao_social', {
+        razao_social: `%${razaoSocial}%`,
       });
     }
     if (esfera) {
@@ -79,7 +79,7 @@ export class OrgaosService {
     const items = await qb
       .skip((pagina - 1) * limite)
       .take(limite)
-      .orderBy('orgao.createdAt', 'DESC')
+      .orderBy('orgao.created_at', 'DESC')
       .getMany();
 
     return {
@@ -120,7 +120,15 @@ export class OrgaosService {
       dto.cnpj = cnpjLimpo;
     }
 
-    Object.assign(orgao, dto);
+    if (dto.razaoSocial !== undefined) orgao.razao_social = dto.razaoSocial;
+    if (dto.nomeFantasia !== undefined) orgao.nome_fantasia = dto.nomeFantasia;
+    if (dto.esfera !== undefined) orgao.esfera = dto.esfera;
+    if (dto.endereco !== undefined) orgao.endereco = dto.endereco as Record<string, any>;
+    if (dto.telefone !== undefined) orgao.telefone = dto.telefone;
+    if (dto.email !== undefined) orgao.email = dto.email;
+    if (dto.logoUrl !== undefined) orgao.logo_url = dto.logoUrl;
+    if (dto.ativo !== undefined) orgao.ativo = dto.ativo;
+    if (dto.cnpj !== undefined) orgao.cnpj = dto.cnpj;
     return this.orgaoRepository.save(orgao);
   }
 
