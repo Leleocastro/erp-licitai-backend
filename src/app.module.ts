@@ -1,7 +1,10 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CoreModule } from './modules/core/core.module';
+import { AuditoriaModule } from './modules/core/auditoria/auditoria.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { Orgao } from './modules/core/orgaos/entities/orgao.entity';
 import { Usuario } from './modules/core/usuarios/entities/usuario.entity';
 import { UsuarioOrgao } from './modules/core/usuarios/entities/usuario-orgao.entity';
@@ -39,6 +42,7 @@ import Redis from 'ioredis';
       }),
     }),
     CoreModule,
+    forwardRef(() => AuditoriaModule),
   ],
   providers: [
     {
@@ -52,6 +56,10 @@ import Redis from 'ioredis';
           retryStrategy: (times) => Math.min(times * 50, 2000),
         });
       },
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
     },
   ],
   exports: ['REDIS_CLIENT'],
