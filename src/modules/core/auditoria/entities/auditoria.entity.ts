@@ -32,10 +32,10 @@ export class Auditoria {
   recurso_id: string;
 
   @Column({ name: 'dados_antes', type: 'jsonb', nullable: true })
-  dados_antes: Record<string, any>;
+  dados_antes: Record<string, any> | null;
 
   @Column({ name: 'dados_depois', type: 'jsonb', nullable: true })
-  dados_depois: Record<string, any>;
+  dados_depois: Record<string, any> | null;
 
   @Column({ length: 45, nullable: true })
   ip: string;

@@ -5,6 +5,7 @@ import { PermissoesModule } from './permissoes/permissoes.module';
 import { AuthModule } from './auth/auth.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { OrgaosModule } from './orgaos/orgaos.module';
+import { AuditoriaModule } from './auditoria/auditoria.module';
 import { Role } from './roles/entities/role.entity';
 import { Permissao } from './permissoes/entities/permissao.entity';
 
@@ -16,6 +17,7 @@ import { Permissao } from './permissoes/entities/permissao.entity';
     OrgaosModule,
     RolesModule,
     PermissoesModule,
+    AuditoriaModule,
   ],
   exports: [
     AuthModule,
@@ -23,6 +25,7 @@ import { Permissao } from './permissoes/entities/permissao.entity';
     OrgaosModule,
     RolesModule,
     PermissoesModule,
+    AuditoriaModule,
   ],
 })
 export class CoreModule {}
