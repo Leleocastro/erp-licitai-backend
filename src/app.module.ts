@@ -1,14 +1,19 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Module, Global } from '@nestjs/common';
+import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import Redis from 'ioredis';
 import { CoreModule } from './modules/core/core.module';
 import databaseConfig from './config/database.config';
+import jwtConfig from './config/jwt.config';
+import redisConfig from './config/redis.config';
+import appConfig from './config/app.config';
 
+@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig],
+      load: [databaseConfig, jwtConfig, redisConfig, appConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -26,5 +31,19 @@ import databaseConfig from './config/database.config';
     }),
     CoreModule,
   ],
+  providers: [
+    {
+      provide: 'REDIS_CLIENT',
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return new Redis({
+          host: config.get('redis.host'),
+          port: config.get('redis.port'),
+          password: config.get('redis.password'),
+        });
+      },
+    },
+  ],
+  exports: ['REDIS_CLIENT'],
 })
 export class AppModule {}
