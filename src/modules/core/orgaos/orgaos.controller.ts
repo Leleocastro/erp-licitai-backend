@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   Query,
-  Headers,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -16,7 +15,6 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiHeader,
 } from '@nestjs/swagger';
 import { OrgaosService } from './orgaos.service';
 import { CreateOrgaoDto } from './dto/create-orgao.dto';
@@ -31,50 +29,26 @@ export class OrgaosController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Criar novo orgao (tenant)' })
+  @ApiOperation({ summary: 'Criar novo orgao' })
   @ApiResponse({ status: 201, description: 'Orgao criado com sucesso.' })
   @ApiResponse({ status: 409, description: 'CNPJ ja cadastrado.' })
-  @ApiHeader({
-    name: 'x-tenant-id',
-    description: 'Contexto do tenant (opcional)',
-    required: false,
-  })
-  async criar(
-    @Body() dto: CreateOrgaoDto,
-    @Headers('x-tenant-id') tenantId?: string,
-  ) {
-    return this.orgaosService.criar(dto, tenantId);
+  async criar(@Body() dto: CreateOrgaoDto) {
+    return this.orgaosService.criar(dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Listar orgaos com paginacao' })
   @ApiResponse({ status: 200, description: 'Lista de orgaos paginada.' })
-  @ApiHeader({
-    name: 'x-tenant-id',
-    description: 'Contexto do tenant (opcional)',
-    required: false,
-  })
-  async listar(
-    @Query() query: QueryOrgaoDto,
-    @Headers('x-tenant-id') tenantId?: string,
-  ) {
-    return this.orgaosService.listar(query, tenantId);
+  async listar(@Query() query: QueryOrgaoDto) {
+    return this.orgaosService.listar(query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhe de orgao' })
   @ApiResponse({ status: 200, description: 'Orgao encontrado.' })
   @ApiResponse({ status: 404, description: 'Orgao nao encontrado.' })
-  @ApiHeader({
-    name: 'x-tenant-id',
-    description: 'Contexto do tenant (opcional)',
-    required: false,
-  })
-  async buscarPorId(
-    @Param('id') id: string,
-    @Headers('x-tenant-id') tenantId?: string,
-  ) {
-    return this.orgaosService.buscarPorId(id, tenantId);
+  async buscarPorId(@Param('id') id: string) {
+    return this.orgaosService.buscarPorId(id);
   }
 
   @Put(':id')
@@ -82,17 +56,11 @@ export class OrgaosController {
   @ApiResponse({ status: 200, description: 'Orgao atualizado com sucesso.' })
   @ApiResponse({ status: 404, description: 'Orgao nao encontrado.' })
   @ApiResponse({ status: 409, description: 'CNPJ ja cadastrado por outro orgao.' })
-  @ApiHeader({
-    name: 'x-tenant-id',
-    description: 'Contexto do tenant (opcional)',
-    required: false,
-  })
   async atualizar(
     @Param('id') id: string,
     @Body() dto: UpdateOrgaoDto,
-    @Headers('x-tenant-id') tenantId?: string,
   ) {
-    return this.orgaosService.atualizar(id, dto, tenantId);
+    return this.orgaosService.atualizar(id, dto);
   }
 
   @Delete(':id')
@@ -100,15 +68,7 @@ export class OrgaosController {
   @ApiOperation({ summary: 'Remover orgao (soft delete)' })
   @ApiResponse({ status: 204, description: 'Orgao removido.' })
   @ApiResponse({ status: 404, description: 'Orgao nao encontrado.' })
-  @ApiHeader({
-    name: 'x-tenant-id',
-    description: 'Contexto do tenant (opcional)',
-    required: false,
-  })
-  async remover(
-    @Param('id') id: string,
-    @Headers('x-tenant-id') tenantId?: string,
-  ): Promise<void> {
-    return this.orgaosService.remover(id, tenantId);
+  async remover(@Param('id') id: string): Promise<void> {
+    return this.orgaosService.remover(id);
   }
 }

@@ -43,8 +43,8 @@ export class AuditoriaService {
     const [data, total] = await this.auditoriaRepo.findAndCount({
       where,
       order: { created_at: 'DESC' },
-      skip: (pagina - 1) * limite,
-      take: limite,
+      skip: (pagina! - 1) * limite!,
+      take: limite!,
     });
 
     return {
@@ -52,7 +52,7 @@ export class AuditoriaService {
       total,
       pagina,
       limite,
-      total_paginas: Math.ceil(total / limite),
+      total_paginas: Math.ceil(total / limite!),
     };
   }
 }

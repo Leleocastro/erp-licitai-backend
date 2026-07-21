@@ -70,7 +70,7 @@ export class AuditInterceptor implements NestInterceptor {
             recurso: auditMetadata.recurso,
             recurso_id: request.params?.id,
             dados_antes: dadosAntes,
-            dados_depois: null,
+            dados_depois: null as unknown as Record<string, any>,
             ip,
             user_agent: userAgent,
           })

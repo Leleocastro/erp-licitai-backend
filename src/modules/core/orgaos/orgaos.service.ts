@@ -20,7 +20,7 @@ export class OrgaosService {
     private readonly orgaoRepository: Repository<Orgao>,
   ) {}
 
-  async criar(dto: CreateOrgaoDto, tenantId?: string): Promise<Orgao> {
+  async criar(dto: CreateOrgaoDto): Promise<Orgao> {
     this.logger.log(`Criando orgao: ${dto.cnpj}`);
 
     const cnpjLimpo = dto.cnpj.replace(/\D/g, '');
@@ -34,9 +34,15 @@ export class OrgaosService {
     }
 
     const orgao = this.orgaoRepository.create({
-      ...dto,
       cnpj: cnpjLimpo,
-      tenantId: dto.tenantId || tenantId || undefined,
+      razao_social: dto.razaoSocial,
+      nome_fantasia: dto.nomeFantasia,
+      esfera: dto.esfera,
+      endereco: dto.endereco as Record<string, any>,
+      telefone: dto.telefone,
+      email: dto.email,
+      logo_url: dto.logoUrl,
+      ativo: dto.ativo,
     });
 
     const salvo = await this.orgaoRepository.save(orgao);
@@ -45,21 +51,17 @@ export class OrgaosService {
     return salvo;
   }
 
-  async listar(query: QueryOrgaoDto, tenantId?: string) {
+  async listar(query: QueryOrgaoDto) {
     const { pagina = 1, limite = 10, cnpj, razaoSocial, esfera, ativo } = query;
 
     const qb = this.orgaoRepository.createQueryBuilder('orgao');
-
-    if (tenantId) {
-      qb.andWhere('orgao.tenantId = :tenantId', { tenantId });
-    }
 
     if (cnpj) {
       qb.andWhere('orgao.cnpj LIKE :cnpj', { cnpj: `%${cnpj.replace(/\D/g, '')}%` });
     }
     if (razaoSocial) {
-      qb.andWhere('orgao.razaoSocial ILIKE :razaoSocial', {
-        razaoSocial: `%${razaoSocial}%`,
+      qb.andWhere('orgao.razao_social ILIKE :razao_social', {
+        razao_social: `%${razaoSocial}%`,
       });
     }
     if (esfera) {
@@ -73,7 +75,7 @@ export class OrgaosService {
     const items = await qb
       .skip((pagina - 1) * limite)
       .take(limite)
-      .orderBy('orgao.createdAt', 'DESC')
+      .orderBy('orgao.created_at', 'DESC')
       .getMany();
 
     return {
@@ -87,20 +89,16 @@ export class OrgaosService {
     };
   }
 
-  async buscarPorId(id: string, tenantId?: string): Promise<Orgao> {
-    const where: any = { id };
-    if (tenantId) {
-      where.tenantId = tenantId;
-    }
-    const orgao = await this.orgaoRepository.findOne({ where });
+  async buscarPorId(id: string): Promise<Orgao> {
+    const orgao = await this.orgaoRepository.findOne({ where: { id } });
     if (!orgao) {
       throw new NotFoundException('Orgao nao encontrado');
     }
     return orgao;
   }
 
-  async atualizar(id: string, dto: UpdateOrgaoDto, tenantId?: string): Promise<Orgao> {
-    const orgao = await this.buscarPorId(id, tenantId);
+  async atualizar(id: string, dto: UpdateOrgaoDto): Promise<Orgao> {
+    const orgao = await this.buscarPorId(id);
 
     if (dto.cnpj) {
       const cnpjLimpo = dto.cnpj.replace(/\D/g, '');
@@ -114,12 +112,21 @@ export class OrgaosService {
       dto.cnpj = cnpjLimpo;
     }
 
-    Object.assign(orgao, dto);
+    if (dto.razaoSocial !== undefined) orgao.razao_social = dto.razaoSocial;
+    if (dto.nomeFantasia !== undefined) orgao.nome_fantasia = dto.nomeFantasia;
+    if (dto.esfera !== undefined) orgao.esfera = dto.esfera;
+    if (dto.endereco !== undefined) orgao.endereco = dto.endereco as Record<string, any>;
+    if (dto.telefone !== undefined) orgao.telefone = dto.telefone;
+    if (dto.email !== undefined) orgao.email = dto.email;
+    if (dto.logoUrl !== undefined) orgao.logo_url = dto.logoUrl;
+    if (dto.ativo !== undefined) orgao.ativo = dto.ativo;
+    if (dto.cnpj !== undefined) orgao.cnpj = dto.cnpj;
+
     return this.orgaoRepository.save(orgao);
   }
 
-  async remover(id: string, tenantId?: string): Promise<void> {
-    const orgao = await this.buscarPorId(id, tenantId);
+  async remover(id: string): Promise<void> {
+    const orgao = await this.buscarPorId(id);
     await this.orgaoRepository.softRemove(orgao);
     this.logger.log(`Orgao removido (soft delete): ${id}`);
   }

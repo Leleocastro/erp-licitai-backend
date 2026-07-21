@@ -25,7 +25,6 @@ import { PermissionsGuard } from '../../../common/guards/permissions.guard';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Controller('core/roles')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

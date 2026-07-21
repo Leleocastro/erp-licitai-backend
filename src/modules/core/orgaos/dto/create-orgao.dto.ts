@@ -2,7 +2,6 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
-  IsEnum,
   MinLength,
   MaxLength,
   Matches,
@@ -10,7 +9,6 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { EsferaEnum } from '../entities/orgao.entity';
 
 class EnderecoDto {
   @ApiProperty({ description: 'Logradouro', example: 'Rua Exemplo' })
@@ -89,13 +87,10 @@ export class CreateOrgaoDto {
 
   @ApiProperty({
     description: 'Esfera do orgao',
-    enum: EsferaEnum,
-    example: EsferaEnum.MUNICIPAL,
+    example: 'municipal',
   })
-  @IsEnum(EsferaEnum, {
-    message: 'Esfera deve ser federal, estadual ou municipal',
-  })
-  esfera: EsferaEnum;
+  @IsString()
+  esfera: string;
 
   @ApiPropertyOptional({
     description: 'Endereco do orgao',
