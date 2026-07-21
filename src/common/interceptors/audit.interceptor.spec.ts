@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { of, throwError } from 'rxjs';
-import { AuditInterceptor, AUDIT_METADATA_KEY } from './audit.interceptor';
+import { AuditInterceptor } from './audit.interceptor';
 import { AuditoriaService } from '../../modules/core/auditoria/auditoria.service';
 
 describe('AuditInterceptor', () => {

@@ -16,7 +16,6 @@ const BLOQUEIO_PREFIX = 'rate_limit:';
 const REFRESH_PREFIX = 'refresh_token:';
 const MAX_TENTATIVAS = 5;
 const BLOQUEIO_MINUTOS = 30;
-const REFRESH_TOKEN_DIAS = 7;
 
 @Injectable()
 export class AuthService {

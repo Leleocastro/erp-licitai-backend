@@ -27,7 +27,7 @@ async function seed() {
     for (const p of permissoesData) {
       const slug = `${p.recurso}:${p.acao}`;
 
-      let existing = await queryRunner.query(
+      const existing = await queryRunner.query(
         `SELECT id FROM permissoes WHERE slug = $1`,
         [slug],
       );

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, Like } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Auditoria } from './entities/auditoria.entity';
 import { FiltrarAuditoriaDto } from './dto/filtrar-auditoria.dto';
 
