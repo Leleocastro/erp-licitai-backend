@@ -8,6 +8,8 @@ import {
   OneToMany,
 } from 'typeorm';
 import { UsuarioOrgao } from './usuario-orgao.entity';
+import { UsuarioRole } from '../../roles/entities/usuario-role.entity';
+import { UsuarioStatus } from './usuario-status.enum';
 
 @Entity('usuarios')
 export class Usuario {
@@ -45,10 +47,11 @@ export class Usuario {
   mfa_secret: string;
 
   @Column({
+    type: 'varchar',
     length: 20,
-    default: 'pendente',
+    default: UsuarioStatus.PENDENTE,
   })
-  status: string;
+  status: UsuarioStatus;
 
   @Column({ type: 'timestamptz', nullable: true })
   ultimo_login: Date;
@@ -64,4 +67,7 @@ export class Usuario {
 
   @OneToMany(() => UsuarioOrgao, (uo) => uo.usuario)
   usuarioOrgaos: UsuarioOrgao[];
+
+  @OneToMany(() => UsuarioRole, (ur) => ur.usuario)
+  usuarioRoles: UsuarioRole[];
 }

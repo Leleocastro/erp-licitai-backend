@@ -1,8 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigType } from '@nestjs/config';
-import { Inject } from '@nestjs/common';
 import jwtConfig from '../../../../config/jwt.config';
 import { UsuariosService } from '../../usuarios/usuarios.service';
 
@@ -27,18 +26,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const usuario = await this.usuariosService.findOne(payload.sub);
+    const usuario = await this.usuariosService.findOneComRoles(payload.sub);
     if (!usuario) {
       throw new UnauthorizedException('Usuário não encontrado');
     }
     if (usuario.status !== 'ativo') {
       throw new UnauthorizedException('Conta não está ativa');
     }
+    const roles =
+      usuario.usuarioRoles?.map((ur) => ur.role?.nome).filter(Boolean) || [];
+
     return {
       id: usuario.id,
       email: usuario.email,
       nome: usuario.nome,
       status: usuario.status,
+      roles,
     };
   }
 }

@@ -24,7 +24,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.enableCors({
-    origin: '*',
+    origin: config.frontendUrl,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -44,6 +44,7 @@ async function bootstrap() {
 
   const logger = new Logger('Bootstrap');
   logger.log(`Aplicação rodando na porta ${port}`);
+  logger.log(`Ambiente: ${config.environment}`);
   logger.log(`Swagger: http://localhost:${port}/api/docs`);
 }
 

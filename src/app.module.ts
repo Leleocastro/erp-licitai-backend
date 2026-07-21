@@ -5,6 +5,8 @@ import { CoreModule } from './modules/core/core.module';
 import { Orgao } from './modules/core/orgaos/entities/orgao.entity';
 import { Usuario } from './modules/core/usuarios/entities/usuario.entity';
 import { UsuarioOrgao } from './modules/core/usuarios/entities/usuario-orgao.entity';
+import { Role } from './modules/core/roles/entities/role.entity';
+import { UsuarioRole } from './modules/core/roles/entities/usuario-role.entity';
 import databaseConfig from './config/database.config';
 import redisConfig from './config/redis.config';
 import jwtConfig from './config/jwt.config';
@@ -20,16 +22,19 @@ import Redis from 'ioredis';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
-      inject: [databaseConfig.KEY],
-      useFactory: (config: ConfigType<typeof databaseConfig>) => ({
+      inject: [databaseConfig.KEY, appConfig.KEY],
+      useFactory: (
+        dbConfig: ConfigType<typeof databaseConfig>,
+        app: ConfigType<typeof appConfig>,
+      ) => ({
         type: 'postgres',
-        host: config.host,
-        port: config.port,
-        username: config.username,
-        password: config.password,
-        database: config.database,
-        entities: [Orgao, Usuario, UsuarioOrgao],
-        synchronize: true,
+        host: dbConfig.host,
+        port: dbConfig.port,
+        username: dbConfig.username,
+        password: dbConfig.password,
+        database: dbConfig.database,
+        entities: [Orgao, Usuario, UsuarioOrgao, Role, UsuarioRole],
+        synchronize: app.typeormSynchronize,
         logging: false,
       }),
     }),

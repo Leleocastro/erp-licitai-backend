@@ -8,8 +8,11 @@ import {
   Put,
   ParseUUIDPipe,
   UseGuards,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -30,9 +33,14 @@ export class UsuariosController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos os usuários' })
-  findAll(): Promise<Usuario[]> {
-    return this.usuariosService.findAll();
+  @ApiOperation({ summary: 'Listar usuários com paginação' })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  findAll(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
+    @Query('take', new DefaultValuePipe(20), ParseIntPipe) take: number,
+  ) {
+    return this.usuariosService.findAll(skip, take);
   }
 
   @Get(':id')
