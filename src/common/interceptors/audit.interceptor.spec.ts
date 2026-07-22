@@ -6,8 +6,8 @@ import { AuditoriaService } from '../../modules/core/auditoria/auditoria.service
 
 describe('AuditInterceptor', () => {
   let interceptor: AuditInterceptor;
-  let auditoriaService: jest.Mocked<Partial<AuditoriaService>>;
-  let reflector: jest.Mocked<Partial<Reflector>>;
+  let auditoriaService: { criar: jest.Mock };
+  let reflector: { get: jest.Mock };
 
   const mockRequest = (method: string, overrides: any = {}) => ({
     method,
