@@ -9,8 +9,18 @@ export interface RoleSeed {
 export async function seedRoles(
   queryRunner: QueryRunner,
   permissoes: PermissaoSeed[],
-): Promise<{ admin_orgao: RoleSeed; usuario_basico: RoleSeed }> {
+): Promise<{
+  admin_sistema: RoleSeed;
+  admin_orgao: RoleSeed;
+  usuario_basico: RoleSeed;
+}> {
   const rolesData = [
+    {
+      nome: 'admin_sistema',
+      descricao: 'Super administrador do sistema (nao vinculado a orgao)',
+      sistema: true,
+      permissaoIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
     {
       nome: 'admin_orgao',
       descricao: 'Administrador do orgao - acesso total as funcionalidades do orgao',
@@ -25,7 +35,11 @@ export async function seedRoles(
     },
   ];
 
-  const results = { admin_orgao: { id: '', nome: '' }, usuario_basico: { id: '', nome: '' } };
+  const results = {
+    admin_sistema: { id: '', nome: '' },
+    admin_orgao: { id: '', nome: '' },
+    usuario_basico: { id: '', nome: '' },
+  };
 
   for (const roleData of rolesData) {
     const [role] = await queryRunner.query(
@@ -49,7 +63,7 @@ export async function seedRoles(
         }
       }
 
-      results[roleData.nome === 'admin_orgao' ? 'admin_orgao' : 'usuario_basico'] = {
+      results[roleData.nome as keyof typeof results] = {
         id: role.id,
         nome: role.nome,
       };
