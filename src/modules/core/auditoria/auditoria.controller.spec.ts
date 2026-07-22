@@ -4,7 +4,7 @@ import { AuditoriaService } from './auditoria.service';
 
 describe('AuditoriaController', () => {
   let controller: AuditoriaController;
-  let service: jest.Mocked<Pick<AuditoriaService, 'listar'>>;
+  let service: { listar: jest.Mock };
 
   const mockResult = {
     data: [

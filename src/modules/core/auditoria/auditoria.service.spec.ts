@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { AuditoriaService } from './auditoria.service';
 import { Auditoria } from './entities/auditoria.entity';
 
 describe('AuditoriaService', () => {
   let service: AuditoriaService;
-  let repo: jest.Mocked<Pick<Repository<Auditoria>, 'create' | 'save' | 'findAndCount'>>;
+  let repo: { create: jest.Mock; save: jest.Mock; findAndCount: jest.Mock };
 
   const mockAuditoria: Auditoria = {
     id: '550e8400-e29b-41d4-a716-446655440000',
