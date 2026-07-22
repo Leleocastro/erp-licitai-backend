@@ -4,8 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
 import { APP_FILTER } from '@nestjs/core';
 import * as bcrypt from 'bcrypt';
-import { EntityManager, DataSource } from 'typeorm';
-import { getMetadataArgsStorage } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { CoreModule } from '../../src/modules/core/core.module';
 import { HealthModule } from '../../src/modules/core/health/health.module';
 import { AllExceptionsFilter } from '../../src/common/filters/http-exception.filter';
@@ -15,19 +14,6 @@ import redisConfig from '../../src/config/redis.config';
 import appConfig from '../../src/config/app.config';
 import { Usuario } from '../../src/modules/core/usuarios/entities/usuario.entity';
 import { Orgao } from '../../src/modules/core/orgaos/entities/orgao.entity';
-
-const pgToSqlite: Record<string, string> = {
-  jsonb: 'simple-json',
-  timestamptz: 'datetime',
-  timestamp: 'datetime',
-};
-const storage = getMetadataArgsStorage();
-for (const col of storage.columns) {
-  const colOpts = col.options as any;
-  if (colOpts.type && pgToSqlite[colOpts.type]) {
-    colOpts.type = pgToSqlite[colOpts.type];
-  }
-}
 
 @Global()
 @Module({
@@ -106,10 +92,28 @@ export function getSeedData() {
   return _seed;
 }
 
+function patchColumnTypesForSqlite() {
+  const pgToSqlite: Record<string, string> = {
+    jsonb: 'simple-json',
+    timestamptz: 'datetime',
+    timestamp: 'datetime',
+  };
+  const { getMetadataArgsStorage } = require('typeorm');
+  const storage = getMetadataArgsStorage();
+  for (const col of storage.columns) {
+    const colOpts = col.options as any;
+    if (colOpts.type && pgToSqlite[colOpts.type]) {
+      colOpts.type = pgToSqlite[colOpts.type];
+    }
+  }
+}
+
 export async function startTestApp(): Promise<INestApplication> {
   process.env.NODE_ENV = 'test';
   process.env.JWT_ACCESS_SECRET = 'test-access-secret-change-me-in-test';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-change-me-in-test';
+
+  patchColumnTypesForSqlite();
 
   const moduleRef = await Test.createTestingModule({
     imports: [TestAppModule],
@@ -143,7 +147,7 @@ async function seedTestData(app: INestApplication) {
   await queryRunner.startTransaction();
 
   try {
-    const senha_hash = await bcrypt.hash('Test@123456', 10);
+    const senha_hash = await bcrypt.hash('Test@123456', 1);
 
     const orgao = await queryRunner.manager.save(Orgao, {
       cnpj: '11222333000181',

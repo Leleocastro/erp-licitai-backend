@@ -1,8 +1,8 @@
 import { setWorldConstructor, World } from '@cucumber/cucumber';
 import { getHttpServer } from './test-app';
+import supertest = require('supertest');
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const request = require('supertest');
+const request = supertest;
 
 export interface ApiResponse {
   statusCode: number;
