@@ -1,4 +1,4 @@
-import { Given, When, Then } from '@cucumber/cucumber';
+import { When, Then } from '@cucumber/cucumber';
 import { AppWorld } from '../support/world';
 import * as request from 'supertest';
 
